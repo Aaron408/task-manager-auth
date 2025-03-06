@@ -50,9 +50,11 @@ app.post("/login", async (req, res) => {
 
     let user;
     let userId;
+    let userRole;
     buscardo.forEach((doc) => {
       user = doc.data();
       userId = doc.id;
+      userRole = doc.role;
     });
 
     //Verificación de la contraseña
@@ -78,7 +80,7 @@ app.post("/login", async (req, res) => {
       return res.status(200).json({
         message: "Inicio de sesión exitoso",
         token, //Enviamos el token generado al cliente
-        user: { ...user, id: userId },
+        user: { ...user, id: userId, role: userRole },
       });
     } else {
       return res.status(401).json({ message: "Contraseña incorrecta" });
