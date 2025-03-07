@@ -59,7 +59,7 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
       const token = jwt.sign(
-        { id: userId, email: user.email },
+        { id: userId, email: user.email, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "10m" }
       );
@@ -69,17 +69,18 @@ app.post("/login", async (req, res) => {
       const expirationTime = new Date();
       expirationTime.setMinutes(expirationTime.getMinutes() + 10);
 
+      //Guardar como timestamp de Firestore para evitar problemas de formato
       await tokensRef.add({
         token,
         userId,
-        expiresAt: expirationTime,
+        expiresAt: admin.firestore.Timestamp.fromDate(expirationTime),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       return res.status(200).json({
         message: "Inicio de sesión exitoso",
         token, //Enviamos el token generado al cliente
-        role: user.role,
-        user: { ...user, id: userId, role: user.role },
+        user: { ...user, id: userId },
       });
     } else {
       return res.status(401).json({ message: "Contraseña incorrecta" });
