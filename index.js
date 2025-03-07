@@ -35,12 +35,12 @@ app.get("/", (req, res) => {
   res.send("Auth service running!");
 });
 
-//Auth routes
+// Auth routes
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    //Buscar que el usuario exista en Firestore
+    // Buscar que el usuario exista en Firestore
     const usersRef = db.collection("users");
     const buscardo = await usersRef.where("email", "==", email).get();
 
@@ -55,29 +55,31 @@ app.post("/login", async (req, res) => {
       userId = doc.id;
     });
 
-    //Verificación de la contraseña
+    // Verificación de la contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (isPasswordValid) {
+      // Generar token con expiración de 10 minutos
       const token = jwt.sign(
         { id: userId, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: "10m" }
       );
 
-      //Guardamos el token del usuario
+      // Guardar token en Firestore con expiración en formato ISO 8601
       const tokensRef = db.collection("tokensVerification");
-      const expirationTime = new Date();
-      expirationTime.setMinutes(expirationTime.getMinutes() + 10);
+      const expirationTime = new Date(
+        Date.now() + 10 * 60 * 1000
+      ).toISOString(); // Formato ISO 8601
 
       await tokensRef.add({
         token,
         userId,
-        expiresAt: expirationTime,
+        expiresAt: expirationTime, // Guardar en formato ISO 8601
       });
 
       return res.status(200).json({
         message: "Inicio de sesión exitoso",
-        token, //Enviamos el token generado al cliente
+        token, // Enviamos el token generado al cliente
         role: user.role,
         user: { ...user, id: userId, role: user.role },
       });
