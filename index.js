@@ -36,6 +36,7 @@ app.get("/", (req, res) => {
 });
 
 // Auth routes
+// Auth routes
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -60,7 +61,7 @@ app.post("/login", async (req, res) => {
     if (isPasswordValid) {
       // Generar token con expiración de 10 minutos
       const token = jwt.sign(
-        { id: userId, email: user.email, role: user.role },
+        { id: userId, email: user.email },
         process.env.JWT_SECRET,
         { expiresIn: "10m" }
       );
@@ -71,7 +72,6 @@ app.post("/login", async (req, res) => {
         Date.now() + 10 * 60 * 1000
       ).toISOString(); // Formato ISO 8601
 
-      //Guardar como timestamp de Firestore para evitar problemas de formato
       await tokensRef.add({
         token,
         userId,
